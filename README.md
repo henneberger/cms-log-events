@@ -27,3 +27,6 @@ Extremely high cardinality log events (many unique GET URIs) with high volume wi
 There exists a log generator to generate log events with tunable cardinality.
 
 The probabilistic approach is measured by an F1 score of the top-k results.
+
+## Issues
+The MinMaxPriorityQueue removal O(k) because I didn't find a clean way to remove non-distinct elements within the time-box of this task.
