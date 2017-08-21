@@ -1,8 +1,10 @@
+import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -102,17 +104,18 @@ public class MainTest {
      * Weighted accuracy with count
      */
     public double calculatePrecision(List<LogResults> truth, List<LogResults> results) {
-        int cnt = Math.min(truth.size(), results.size());
+        Map<String, LogResults> mapped = Maps.uniqueIndex(truth, e->e.uri);
         double precision = 0;
-        for (int i = 0; i < cnt; i++) {
-            LogResults t = truth.get(i);
-            LogResults r = results.get(i);
-            if (t.uri.equals(r.uri)) {
+        int resultCnt = 0;
+        for (LogResults r : results) {
+            LogResults t;
+            if ((t = mapped.get(r.uri)) != null) {
                 precision += Math.min(t.size, r.size) / (double)Math.max(t.size, r.size);
+                resultCnt++;
             }
         }
 
-        return precision / truth.size();
+        return precision / resultCnt;
     }
 
     /**
