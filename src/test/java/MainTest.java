@@ -29,7 +29,7 @@ public class MainTest {
         List<LogResults> results = count.inMemoryCount(getLocalFileStream(), topK);
 
         logger.info("Results " + results);
-        assertEquals(results.get(0).file, "/images/ksclogosmall.gif");
+        assertEquals(results.get(0).uri, "/images/ksclogosmall.gif");
         assertEquals(results.get(0).size, 3635 * 3L);
     }
 
@@ -41,7 +41,7 @@ public class MainTest {
         List<LogResults> results = count.probabilisticCount(getLocalFileStream(), topK, cmsDepth, cmdWidth, 0);
 
         logger.info("Results " + results);
-        assertEquals(results.get(0).file, "/images/ksclogosmall.gif");
+        assertEquals(results.get(0).uri, "/images/ksclogosmall.gif");
         assertEquals(results.get(0).size, 3635 * 3L);
     }
 
@@ -79,7 +79,7 @@ public class MainTest {
         assertEquals(1, f1, 0.05); //verify f1 score is at least 0.95%
 
         for (int i = 0; i < 5; i++) {
-            assertEquals(inMemoryResults.get(i).file, probabilisticResults.get(i).file);
+            assertEquals(inMemoryResults.get(i).uri, probabilisticResults.get(i).uri);
             assertEquals(inMemoryResults.get(i).size, probabilisticResults.get(i).size, inMemoryResults.get(i).size * 0.05); //5% diff
         }
     }
@@ -89,11 +89,11 @@ public class MainTest {
      */
     public double calculateRecall(List<LogResults> truth, List<LogResults> results) {
         Set<String> s = truth.stream()
-                .map(e->e.file)
+                .map(e->e.uri)
                 .collect(Collectors.toSet());
 
         long recall = results.stream()
-                .filter(e->s.contains(e.file))
+                .filter(e->s.contains(e.uri))
                 .count();
         return recall / (double) truth.size();
     }
@@ -107,7 +107,7 @@ public class MainTest {
         for (int i = 0; i < cnt; i++) {
             LogResults t = truth.get(i);
             LogResults r = results.get(i);
-            if (t.file.equals(r.file)) {
+            if (t.uri.equals(r.uri)) {
                 precision += Math.min(t.size, r.size) / (double)Math.max(t.size, r.size);
             }
         }

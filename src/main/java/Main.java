@@ -26,7 +26,7 @@ public class Main {
                 .filter(log -> "GET".equals(log.method))
                 .filter(log -> log.status >= 200 && log.status < 300)
                 .collect(Collectors.groupingBy(
-                        f->f.location,
+                        f->f.uri,
                             reducing(new LogCounter(0L, 0L), e -> new LogCounter(1L, e.size), //reduces w/ summing count & size
                                 (f, g) -> new LogCounter(f.count + g.count, f.size + g.size))
                 ));
@@ -58,18 +58,18 @@ public class Main {
                 .filter(log -> log.status >= 200 && log.status < 300);
 
         bundleStream.forEach((f)->{
-            cmsCount.add(f.location, 1);
-            cmsSize.add(f.location, f.size);
-            long estimatedCount = cmsCount.estimateCount(f.location);
-            topKResults.remove(new TopKCounter(f.location, -1)); //remove any existing entry
-            topKResults.offer(new TopKCounter(f.location, estimatedCount));
+            cmsCount.add(f.uri, 1);
+            cmsSize.add(f.uri, f.size);
+            long estimatedCount = cmsCount.estimateCount(f.uri);
+            topKResults.remove(new TopKCounter(f.uri, -1)); //remove any existing entry
+            topKResults.offer(new TopKCounter(f.uri, estimatedCount));
         });
 
         final Comparator<TopKCounter> countComparator = Comparator.comparing(e->e.count);
 
         return topKResults.stream()
                 .sorted(countComparator.reversed())
-                .map(f->new LogResults(f.location, cmsSize.estimateCount(f.location)))
+                .map(f->new LogResults(f.uri, cmsSize.estimateCount(f.uri)))
                 .collect(Collectors.toList());
     }
 
@@ -91,10 +91,10 @@ public class Main {
             }
 
             for (LogResults result : results) {
-                System.out.println(result.file + " " + result.size);
+                System.out.println(result.uri + " " + result.size);
             }
         } catch (IOException e) {
-            System.out.println("Could not find location " + args[0]);
+            System.out.println("Could not find uri " + args[0]);
             e.printStackTrace();
         };
     }
@@ -107,7 +107,7 @@ class LogBundle {
 
     ZonedDateTime date;
     String method;
-    String location;
+    String uri;
     String httpVersion;
     int status;
     long size;
@@ -118,7 +118,7 @@ class LogBundle {
         if (matcher.find()) {
             logBundle.date = ZonedDateTime.parse(matcher.group(1), DATE_FORMAT);
             logBundle.method = matcher.group(2);
-            logBundle.location = matcher.group(3);
+            logBundle.uri = matcher.group(3);
             logBundle.httpVersion = matcher.group(4);
             logBundle.status = Integer.parseInt(matcher.group(5));
             logBundle.size = Long.parseLong(matcher.group(6));
@@ -140,11 +140,11 @@ class LogCounter {
     }
 }
 class TopKCounter {
-    final String location;
+    final String uri;
     final long count;
 
-    public TopKCounter(String location, long count) {
-        this.location = location;
+    public TopKCounter(String uri, long count) {
+        this.uri = uri;
         this.count = count;
     }
 
@@ -155,27 +155,27 @@ class TopKCounter {
 
         final TopKCounter that = (TopKCounter) o;
 
-        return location != null ? location.equals(that.location) : that.location == null;
+        return uri != null ? uri.equals(that.uri) : that.uri == null;
     }
 
     @Override
     public int hashCode() {
-        return location != null ? location.hashCode() : 0;
+        return uri != null ? uri.hashCode() : 0;
     }
 }
 class LogResults {
-    final String file;
+    final String uri;
     final long size;
 
-    public LogResults(String file, long size) {
-        this.file = file;
+    public LogResults(String uri, long size) {
+        this.uri = uri;
         this.size = size;
     }
 
     @Override
     public String toString() {
         return "LogResults{" +
-                "file='" + file + '\'' +
+                "uri='" + uri + '\'' +
                 ", size=" + size +
                 '}';
     }
